@@ -1,3 +1,4 @@
+import requests
 import requests as req
 from bs4 import BeautifulSoup
 
@@ -33,7 +34,7 @@ def next_page():
     soup = BeautifulSoup(req.get(url, headers=headers).text, "html.parser")
     tags = soup.select('li.next a')
     for link in tags:
-        url_link = link.get('href')
+        url_link = link.get('href')  # get link in this tags
     return url_link
 
 
@@ -46,14 +47,36 @@ def get_bookname(url):
             print(bookname)
             file.write(bookname)
             file.write("\n")
-# 找到書名為A開頭的書名 與 其詳細資訊
+
+
+# 找到書名為A開頭的書名 與 其詳細資訊(Price)
 def get_moreinfo():
-    soup = BeautifulSoup(req.get(url, headers = headers).text, "html.parser")
-    tags = soup.select("") #看有什麼選擇
+
+    soup = BeautifulSoup(req.get(url, headers=headers).text, "html.parser")
+    tags = soup.select("div.image_container a")  # 看有什麼選擇
+    for info_link in tags:
+        info_url_link = info_link.get("href")  # find the link
+        pages_url = url_base + info_url_link
+
+        print(pages_url)
+
+        soup1 = BeautifulSoup(req.get(pages_url, headers=headers).text, "html.parser")
+        tags1 = soup1.select("p.price_color")
+        for info in tags1:
+            price = info.get_text()
+            print(price[1:])  # 把第一個亂碼去除掉
+        # req.get(url)
+
+
+
 
 # 把找到的資訊存成csv
 
-for i in range(2):
-    get_bookname(url)
-    url = url_base + next_page()
 
+# main running area
+get_moreinfo()
+
+# for i in range(2):
+#     get_bookname(url)
+#     url = url_base + next_page()
+print("finished")
