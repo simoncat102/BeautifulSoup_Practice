@@ -60,12 +60,23 @@ def get_moreinfo():
 
         print(pages_url)
 
-        soup1 = BeautifulSoup(req.get(pages_url, headers=headers).text, "html.parser")
-        tags1 = soup1.select("p.price_color")
-        for info in tags1:
-            price = info.get_text()
-            print(price[1:])  # 把第一個亂碼去除掉
-        # req.get(url)
+        soup_info = BeautifulSoup(req.get(pages_url, headers=headers).text, "html.parser")
+        tags_price = soup_info.select("p.price_color")
+        tags_bookname = soup_info.select("div.product_main h1")
+        tags_status = soup_info.select("div.product_main p.availability")
+        price = tags_price[0].get_text() # 只抓陣列中的第一個選項
+        bookname = tags_bookname[0].get_text()
+
+        print("Bookname:",bookname,"; Price:",price[1:])
+        for status in tags_status:
+            status_text = status.get_text()
+            # break into lines and remove leading and trailing space on each
+            lines = (line.strip() for line in status_text.splitlines())
+            # break multi-headlines into a line each
+            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+            # drop blank lines
+            text = '\n'.join(chunk for chunk in chunks if chunk)
+            print("Status:",text)
 
 
 
