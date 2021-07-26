@@ -46,8 +46,12 @@ def get_bookname(url):
             print(bookname)
             file.write(bookname)
             file.write("\n")
+# 找到書名為A開頭的書名 與 其詳細資訊
+def get_moreinfo():
+    soup = BeautifulSoup(req.get(url, headers = headers).text, "html.parser")
+    tags = soup.select("") #看有什麼選擇
 
-
+# 把找到的資訊存成csv
 
 for i in range(2):
     get_bookname(url)
