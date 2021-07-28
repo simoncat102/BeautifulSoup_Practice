@@ -1,5 +1,6 @@
 import requests
 import requests as req
+import pandas as pd
 from bs4 import BeautifulSoup
 
 url_base = "http://books.toscrape.com/catalogue/"
@@ -13,7 +14,7 @@ headers = {'simoncat102': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Ge
 file = open("bookname.txt", "w")  # 開啟要輸出的檔案 x = create_file / w = create if not exist
 
 
-def get_category(): #找出有多少種類 + 練習把text的空格去除
+def get_category():  # 找出有多少種類 + 練習把text的空格去除
     soup = BeautifulSoup(req.get(url, headers=headers).text, "html.parser")
     tags = soup.select('ul.nav ul li a')
     cate_list = []
@@ -30,7 +31,7 @@ def get_category(): #找出有多少種類 + 練習把text的空格去除
     return cate_list
 
 
-def next_page(): # 跳轉至下一頁
+def next_page():  # 跳轉至下一頁
     soup = BeautifulSoup(req.get(url, headers=headers).text, "html.parser")
     tags = soup.select('li.next a')
     for link in tags:
@@ -38,7 +39,7 @@ def next_page(): # 跳轉至下一頁
     return url_link
 
 
-def get_bookname(url): # 找出網站頁面的書名 (easy way)
+def get_bookname(url):  # 找出網站頁面的書名 (easy way)
     soup = BeautifulSoup(req.get(url, headers=headers).text, "html.parser")
     tags = soup.select('article.product_pod a')
     for name in tags:
@@ -53,39 +54,50 @@ def get_bookname(url): # 找出網站頁面的書名 (easy way)
 def get_moreinfo():
     soup = BeautifulSoup(req.get(url, headers=headers).text, "html.parser")
     tags = soup.select("div.image_container a")  # 看有什麼選擇
+
+    # pandas的預設表格
+    data = {'Bookname': [""],
+            'Price': [""],
+            'Status': [""],
+            }
+    dataFrame = pd.DataFrame(data)  # 設定為df
+    index = 0 #count the index
     for info_link in tags:
         info_url_link = info_link.get("href")  # find the link
-        pages_url = url_base + info_url_link
-
-        print(pages_url)
+        pages_url = url_base + info_url_link  # 書頁連結
 
         soup_info = BeautifulSoup(req.get(pages_url, headers=headers).text, "html.parser")
         tags_price = soup_info.select("p.price_color")
         tags_bookname = soup_info.select("div.product_main h1")
         tags_status = soup_info.select("div.product_main p.availability")
-        price = tags_price[0].get_text()  # 只抓陣列中的第一個選項
-        bookname = tags_bookname[0].get_text()
+        price = tags_price[0].get_text()[1:] #陣列中的第一個選項 抓價格
+        bookname = tags_bookname[0].get_text()  # 抓書名
 
-        print("Bookname:", bookname, "; Price:", price[1:])
+        dataFrame = dataFrame.append({
+            'Bookname': bookname,
+            'Price': price,
+        }, ignore_index=True)
+        index+=1
         for status in tags_status:
+
             status_text = status.get_text()
             # break into lines and remove leading and trailing space on each
             lines = (line.strip() for line in status_text.splitlines())
             # break multi-headlines into a line each
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
             # drop blank lines
-            text = '\n'.join(chunk for chunk in chunks if chunk)
-            print("Status:", text)
-
-
-# 把找到的資訊存成csv
+            status_text = '\n'.join(chunk for chunk in chunks if chunk)  # 抓狀態
+            dataFrame.at[index,'Status']=status_text
+    print(dataFrame)
 
 
 # main running area
-count = 0
-for i in range(3):
-    count += 20
-    get_moreinfo()
-    url = url_base + next_page()
-print("total run:", count)
-print("finished")
+get_moreinfo()
+
+# count = 0
+# for i in range(3):
+#     count += 20
+#     get_moreinfo()
+#     url = url_base + next_page()
+# print("total run:", count)
+# print("finished")
