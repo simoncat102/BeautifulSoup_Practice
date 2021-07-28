@@ -56,12 +56,11 @@ def get_moreinfo():
     tags = soup.select("div.image_container a")  # 看有什麼選擇
 
     # pandas的預設表格
-    data = {'Bookname': [""],
-            'Price': [""],
-            'Status': [""],
+    data = {'Bookname': [],
+            'Price': [],
+            'Status': [],
             }
     dataFrame = pd.DataFrame(data)  # 設定為df
-    index = 0 #count the index
     for info_link in tags:
         info_url_link = info_link.get("href")  # find the link
         pages_url = url_base + info_url_link  # 書頁連結
@@ -70,16 +69,11 @@ def get_moreinfo():
         tags_price = soup_info.select("p.price_color")
         tags_bookname = soup_info.select("div.product_main h1")
         tags_status = soup_info.select("div.product_main p.availability")
-        price = tags_price[0].get_text()[1:] #陣列中的第一個選項 抓價格
+        price = tags_price[0].get_text()[1:]  # 陣列中的第一個選項 抓價格
         bookname = tags_bookname[0].get_text()  # 抓書名
 
-        dataFrame = dataFrame.append({
-            'Bookname': bookname,
-            'Price': price,
-        }, ignore_index=True)
-        index+=1
-        for status in tags_status:
 
+        for status in tags_status:
             status_text = status.get_text()
             # break into lines and remove leading and trailing space on each
             lines = (line.strip() for line in status_text.splitlines())
@@ -87,10 +81,14 @@ def get_moreinfo():
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
             # drop blank lines
             status_text = '\n'.join(chunk for chunk in chunks if chunk)  # 抓狀態
-            dataFrame.at[index,'Status']=status_text
+            # dataFrame.at[index, 'Status'] = status_text
+            dataFrame = dataFrame.append({
+                'Bookname': bookname,
+                'Price': price,
+                'Status':status_text #你把這個註解掉 你就不會有...
+            }, ignore_index=True)
+
     print(dataFrame)
-
-
 # main running area
 get_moreinfo()
 
