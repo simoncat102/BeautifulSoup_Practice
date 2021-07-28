@@ -1,4 +1,3 @@
-import requests
 import requests as req
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -52,6 +51,7 @@ def get_bookname(url):  # 找出網站頁面的書名 (easy way)
 
 # 找到書名為A開頭的書名 與 其詳細資訊(Bookname, Price, Availiable)
 def get_moreinfo():
+    global status_text
     soup = BeautifulSoup(req.get(url, headers=headers).text, "html.parser")
     tags = soup.select("div.image_container a")  # 看有什麼選擇
 
@@ -61,6 +61,8 @@ def get_moreinfo():
             'Status': [],
             }
     dataFrame = pd.DataFrame(data)  # 設定為df
+    pd.set_option('display.width', 600)
+
     for info_link in tags:
         info_url_link = info_link.get("href")  # find the link
         pages_url = url_base + info_url_link  # 書頁連結
@@ -72,7 +74,6 @@ def get_moreinfo():
         price = tags_price[0].get_text()[1:]  # 陣列中的第一個選項 抓價格
         bookname = tags_bookname[0].get_text()  # 抓書名
 
-
         for status in tags_status:
             status_text = status.get_text()
             # break into lines and remove leading and trailing space on each
@@ -82,20 +83,15 @@ def get_moreinfo():
             # drop blank lines
             status_text = '\n'.join(chunk for chunk in chunks if chunk)  # 抓狀態
             # dataFrame.at[index, 'Status'] = status_text
-            dataFrame = dataFrame.append({
-                'Bookname': bookname,
-                'Price': price,
-                'Status':status_text #你把這個註解掉 你就不會有...
-            }, ignore_index=True)
-
+        pd.set_option("display.colheader_justify", "center")  # header靠左
+        dataFrame = dataFrame.append({
+            'Bookname': bookname,
+            'Price': price,
+            'Status': status_text
+        }, ignore_index=True)
     print(dataFrame)
+
+
 # main running area
 get_moreinfo()
 
-# count = 0
-# for i in range(3):
-#     count += 20
-#     get_moreinfo()
-#     url = url_base + next_page()
-# print("total run:", count)
-# print("finished")
